@@ -5,7 +5,7 @@ About My Project
 
 For my final project, I created the Deadpool Encryption Tool. I wanted to build something that felt like a "spy tool" but also demonstrated the coding concepts we learned in class, like file handling, loops, and Regular Expressions (Regex).
 
-The idea is that this is tool is for basic cybersecurity tasks: scrambling messages so they can't be read, generating strong passwords, and scanning files to find hidden contact info.
+The idea is that this tool automates basic cybersecurity tasks: scrambling messages so they can't be read, generating strong passwords, and scanning files to find hidden contact info.
 
 What It Does
 
