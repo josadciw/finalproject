@@ -1,7 +1,7 @@
 # finalproject
 Deadpool Encryption Tool
 
-Hi! This is my final project. I built a Python tool inspired by Deadpool that handles a few different security tasks. It is designed to be a "Swiss Army knife" for basic encryption and recon.
+Hi! This is my final project. I built a Python tool inspired by Deadpool that handles a few different security tasks. It is designed to be a entry level tool for basic encryption and recon.
 
 What it does
 
