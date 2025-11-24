@@ -2,6 +2,7 @@ import random
 import string
 import re
 import os
+import webbrowser  # Required for opening the browser in Feature 3
 
 # Final Project: Deadpool Encryption Tool
 # This script includes three features: Encryption, Password Generation, and OSINT Scanning.
@@ -19,7 +20,6 @@ def create_test_files():
     print(f"\n[System] Current working folder: {script_folder}")
 
     # Create test1.txt with dummy data for the OSINT scanner to find
-    # Only create it if it doesn't exist, or just overwrite it to ensure defaults are there
     f = open(file1_path, "w")
     f.write("Target: Francis / Ajax\n")
     f.write("Contact Email: francis@badguy.com\n")
@@ -55,7 +55,16 @@ def feature_cipher():
     text_content = ""
 
     if source == "1":
-        text_content = input("Enter text: ")
+        # Multiline Input Support
+        print("Enter text (Press Enter twice to finish):")
+        lines = []
+        while True:
+            line = input()
+            if line == "":
+                break
+            lines.append(line)
+        # Join the lines back together with newline characters
+        text_content = "\n".join(lines)
     else:
         # Check if file exists before reading
         if os.path.exists(file2_path):
@@ -142,83 +151,128 @@ def feature_password():
     input("Press Enter to return...")
 
 
-# Feature 3: OSINT Scanner (Finds emails and phones in ANY file)
+# Feature 3: OSINT Scanner (Finds emails/phones OR searches Social Media)
 def feature_osint():
     print("\n--- Target Scanner (OSINT) ---")
-
-    # Ask the user if they want to use the default stash or a custom location
-    print("Select Scan Target:")
-    print("1. Default (test1.txt)")
-    print("2. Custom File Path")
-    choice = input("Choice: ")
-
-    # Set the file path based on user choice
-    target_file = file1_path
-
-    if choice == "2":
-        raw_path = input("Enter the full file path to scan: ")
-        # .strip() removes extra spaces and quotation marks often added by 'Copy Path'
-        target_file = raw_path.strip().strip('"').strip("'")
-
-    # Verify the file exists
-    if not os.path.exists(target_file):
-        print(f"Error: The file '{target_file}' is missing. Target lost.")
-        return
-
-    # Open and read the file content
-    # Using 'errors=ignore' ensures the script doesn't crash on binary files or weird encodings
-    try:
-        f = open(target_file, "r", encoding='utf-8', errors='ignore')
-        content = f.read()
-        f.close()
-    except Exception as e:
-        print(f"Error reading file: {e}")
-        return
-
-    # Display content for verification (truncated if too long)
-    print("\nFile Contents (Preview):")
-    print("------------------------------")
-    print(content[:500] + ("..." if len(content) > 500 else ""))
-    print("------------------------------")
-
-    # Regex pattern for Email addresses
-    email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    print("Select Operation:")
+    print("1. Scan Local File (Emails/Phones)")
+    print("2. LinkedIn Recon")
+    print("3. Facebook Search")
+    print("4. X (Twitter) Search")  # <--- NEW
+    print("5. Instagram Search")    # <--- NEW
     
-    # Regex pattern for Phone numbers
-    # Matches digits, dashes, dots, parens, and spaces. Must be 7+ chars.
-    phone_regex = r'[\d\-\(\)\.\s]{7,}'
+    op_choice = input("Choice: ")
 
-    # Find matches and remove duplicates using set()
-    emails = list(set(re.findall(email_regex, content)))
-    raw_phones = list(set(re.findall(phone_regex, content)))
+    # --- OPTION 1: SCAN LOCAL FILE ---
+    if op_choice == "1":
+        print("\n[File Scanner Selected]")
+        print("1. Default (test1.txt)")
+        print("2. Custom File Path")
+        choice = input("Choice: ")
 
-    # Filter phone numbers to ensure they have enough digits
-    valid_phones = []
-    for p in raw_phones:
-        # Count actual digits in the string
-        digit_count = 0
-        for char in p:
-            if char.isdigit():
-                digit_count += 1
+        # Set the file path based on user choice
+        target_file = file1_path
+
+        if choice == "2":
+            raw_path = input("Enter the full file path to scan: ")
+            # .strip() removes extra spaces and quotation marks often added by 'Copy Path'
+            target_file = raw_path.strip().strip('"').strip("'")
+
+        # Verify the file exists
+        if not os.path.exists(target_file):
+            print(f"Error: The file '{target_file}' is missing. Target lost.")
+            return
+
+        # Open and read the file content
+        try:
+            f = open(target_file, "r", encoding='utf-8', errors='ignore')
+            content = f.read()
+            f.close()
+        except Exception as e:
+            print(f"Error reading file: {e}")
+            return
+
+        # Display content for verification (truncated if too long)
+        print("\nFile Contents (Preview):")
+        print("------------------------------")
+        print(content[:500] + ("..." if len(content) > 500 else ""))
+        print("------------------------------")
+
+        # Regex pattern for Email addresses
+        email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
         
-        # Only keep it if it looks like a real number (5+ digits)
-        if digit_count >= 5:
-            valid_phones.append(p.strip())
+        # Regex pattern for Phone numbers
+        phone_regex = r'[\d\-\(\)\.\s]{7,}'
 
-    # Display findings
-    print(f"\nEmails Found: {len(emails)}")
-    for e in emails: print(f"- {e}")
+        # Find matches and remove duplicates using set()
+        emails = list(set(re.findall(email_regex, content)))
+        raw_phones = list(set(re.findall(phone_regex, content)))
 
-    print(f"\nPhones Found: {len(valid_phones)}")
-    for p in valid_phones: print(f"- {p}")
+        # Filter phone numbers to ensure they have enough digits
+        valid_phones = []
+        for p in raw_phones:
+            # Count actual digits in the string
+            digit_count = 0
+            for char in p:
+                if char.isdigit():
+                    digit_count += 1
+            
+            # Only keep it if it looks like a real number (5+ digits)
+            if digit_count >= 5:
+                valid_phones.append(p.strip())
 
-    # Save the report to a file
-    if input("\nSave report? (y/n): ") == 'y':
-        f = open(os.path.join(script_folder, "scan_report.txt"), "w")
-        f.write(f"Source: {target_file}\n")
-        f.write(f"Emails: {emails}\nPhones: {valid_phones}")
-        f.close()
-        print("Report saved.")
+        # Display findings
+        print(f"\nEmails Found: {len(emails)}")
+        for e in emails: print(f"- {e}")
+
+        print(f"\nPhones Found: {len(valid_phones)}")
+        for p in valid_phones: print(f"- {p}")
+
+        # Save the report to a file
+        if input("\nSave report? (y/n): ") == 'y':
+            f = open(os.path.join(script_folder, "scan_report.txt"), "w")
+            f.write(f"Source: {target_file}\n")
+            f.write(f"Emails: {emails}\nPhones: {valid_phones}")
+            f.close()
+            print("Report saved.")
+
+    # --- SOCIAL MEDIA SEARCH HELPER ---
+    elif op_choice in ["2", "3", "4", "5"]:
+        target_name = input("\nEnter the name of the target: ")
+        
+        site = ""
+        site_name = ""
+        extra_query = ""
+        
+        if op_choice == "2":
+            site = "linkedin.com"
+            site_name = "LinkedIn"
+            extra_query = input("Enter company/keyword (optional): ")
+        elif op_choice == "3":
+            site = "facebook.com"
+            site_name = "Facebook"
+            extra_query = input("Enter city/keyword (optional): ")
+        elif op_choice == "4":
+            site = "twitter.com"
+            site_name = "X (Twitter)"
+            extra_query = input("Enter handle/keyword (optional): ")
+        elif op_choice == "5":
+            site = "instagram.com"
+            site_name = "Instagram"
+            extra_query = input("Enter handle/keyword (optional): ")
+
+        print(f"\n[{site_name} Recon Selected]")
+        
+        # Construct the Google Dork query
+        search_query = f'site:{site} "{target_name}" {extra_query}'
+        
+        print(f"Searching for: {search_query}")
+        print("Opening browser... maximum effort!")
+        
+        webbrowser.open(f"https://www.google.com/search?q={search_query}")
+        
+    else:
+        print("Invalid choice.")
 
     input("\nPress Enter to return...")
 
