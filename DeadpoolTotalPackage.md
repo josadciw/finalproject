@@ -1,3 +1,5 @@
+#Deadpool Total Package
+
 Deadpool Total Package
 This is my final Python project. I created a multi-tool script that helps with privacy and gathering information. I called it the "Deadpool Total Package" because it’s a little chaotic but gets the job done.
 
@@ -41,6 +43,6 @@ Run the script DeadpoolTotalPackage.py.
 
 Use the menu to pick what you want to do (type 1, 2, 3, or 4).
 
-Note: The script creates files in the same folder where the script is saved. It will always ask you before overwriting a file, so it is safe to use.
+Note: If you want to keep your results (like your encrypted messages), the program can save the files right to your desktop. It will always ask for your permission first, so it won't save anything unless you say it's okay.
 
 Maximum effort!
