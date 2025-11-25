@@ -2,273 +2,337 @@ import random
 import string
 import re
 import os
-import webbrowser  # Required for opening the browser in Feature 3
+import webbrowser
 
-# Final Project: Deadpool Encryption Tool
-# This script includes three features: Encryption, Password Generation, and OSINT Scanning.
+# My Final Project: Deadpool Encryption Tool
+# I added a feature to let the user pick exactly where to save files.
+# I also fixed the regex so it stops grabbing extra dots in emails and phone numbers.
 
-# Get the directory where this script is running to ensure files are saved correctly
+# This gets the folder where this script is running
 script_folder = os.path.dirname(os.path.abspath(__file__))
 
-# Define the filenames for the test files
-file1_path = os.path.join(script_folder, "test1.txt")
-file2_path = os.path.join(script_folder, "test2.txt")
+def get_save_path(default_path):
+    # This function asks the user if they want to use a custom path
+    print(f"Default path: {default_path}")
+    
+    # I use strip to remove extra spaces or quotes if they paste a path
+    user_input = input("Enter full path (or press Enter to use default): ").strip().strip('"').strip("'")
+    
+    if user_input:
+        # If they only typed a folder name, I need to add the filename to it
+        if os.path.isdir(user_input):
+            return os.path.join(user_input, os.path.basename(default_path))
+        return user_input
+    
+    # If they didn't type anything, just use the default
+    return default_path
 
+def check_overwrite(file_path):
+    # This checks if a file already exists so we don't accidentally delete it
+    if os.path.exists(file_path):
+        print(f"[Warning] The file '{file_path}' already exists.")
+        confirm = input("Overwrite it? (y/n): ")
+        if confirm.lower() != 'y':
+            print("Operation canceled. File was NOT saved.")
+            return False # Return False so we know not to save
+    return True # Return True if it's safe to save
 
-# Function to automatically create the text files needed for the project
-def create_test_files():
-    print(f"\n[System] Current working folder: {script_folder}")
-
-    # Create test1.txt with dummy data for the OSINT scanner to find
-    f = open(file1_path, "w")
-    f.write("Target: Francis / Ajax\n")
-    f.write("Contact Email: francis@badguy.com\n")
-    f.write("Standard Phone: 555-867-5309\n")
-    f.write("Phone with spaces: (555) 123 4567\n") 
-    f.write("Short Phone: 555-0199\n")
-    f.write("Phone with dots: 123.456.7890\n")
-    f.close()
-    print("test1.txt created/updated successfully.")
-
-    # Create test2.txt to be used for the Encryption feature
-    if not os.path.exists(file2_path):
-        f = open(file2_path, "w")
-        f.write("The secret stash is hidden under the floorboards.")
-        f.close()
-        print("test2.txt created successfully.")
-
-
-# Feature 1: Substitution Cipher (Encrypts and Decrypts text)
+# Feature 1: The Cipher (Scrambler)
 def feature_cipher():
     print("\n--- Deadpool's File Scrambler ---")
     
-    # Define the standard alphabet and the shifted key for substitution
+    # My simple alphabet strings for substitution
     alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     key      = "defghijklmnopqrstuvwxyzabcDEFGHIJKLMNOPQRSTUVWXYZABC"
 
-    # Ask the user for the mode
     mode = input("Select: (1) Encrypt or (2) Decrypt: ")
     
-    # Ask the user for the source of the text
-    source = input("Source: (1) Manual Input or (2) Read 'test2.txt': ")
+    print("\nSource:")
+    print("1. Manual Input (Type text now)")
+    print("2. Internal Demo Text")
+    print("3. External File (Input a file path)")
+    source = input("Choice: ")
     
     text_content = ""
+    file_path_in = "" 
 
+    # Check which source the user picked
     if source == "1":
-        # Multiline Input Support
-        print("Enter text (Press Enter twice to finish):")
+        # Let the user type until they hit enter on an empty line
+        print("\n[Manual Mode] Enter text below (Press Enter twice to finish):")
         lines = []
         while True:
             line = input()
             if line == "":
                 break
             lines.append(line)
-        # Join the lines back together with newline characters
         text_content = "\n".join(lines)
-    else:
-        # Check if file exists before reading
-        if os.path.exists(file2_path):
-            f = open(file2_path, "r")
-            text_content = f.read()
-            f.close()
+
+    elif source == "2":
+        # Load the hardcoded text
+        print("\n[System] Loading internal demo text...")
+        if mode == "1":
+            text_content = "The secret stash is hidden under the floorboards."
         else:
-            print("Error: test2.txt missing.")
+            text_content = "Wkh vhfuhw vwdvk lv klgghq xqghu wkh iooruerdugv."
+
+    elif source == "3":
+        # Read from a file on the computer
+        if mode == "2":
+            print("\n[TIP] Make sure to select the file ending in '_encrypted.txt'!")
+        
+        raw_path = input("Enter the full path of the text file: ")
+        # Clean up the path input
+        file_path_in = raw_path.strip().strip('"').strip("'")
+
+        if not os.path.exists(file_path_in):
+            print(f"Error: The file '{file_path_in}' was not found.")
             return
 
-    # Loop through each character to encrypt or decrypt it
+        try:
+            # I use 'replace' for errors so it doesn't crash on weird characters
+            with open(file_path_in, 'r', encoding='utf-8', errors='replace') as f:
+                text_content = f.read()
+            print(f"[System] File loaded: {len(text_content)} characters.")
+        except Exception as e:
+            print(f"Error reading file: {e}")
+            return
+    else:
+        print("Invalid source selection.")
+        return
+
+    # Check if the text is empty
+    if not text_content.strip():
+        print("\n[Warning] No text found to process! Operation aborted.")
+        input("Press Enter to return...")
+        return
+
+    # This loop goes through every character and swaps it
+    print("\nProcessing...")
     final_text = ""
     for char in text_content:
         if char in alphabet:
-            # If mode is 1, we encrypt (shift forward using key)
-            if mode == "1":
+            if mode == "1": # Encrypt
                  index = alphabet.find(char)
                  final_text += key[index]
-            # If mode is 2, we decrypt (reverse using alphabet)
-            else:
+            else: # Decrypt
                  index = key.find(char)
                  final_text += alphabet[index]
         else:
-            # If character is not a letter (like a space or number), keep it as is
+            # If it's not a letter (like a number or space), just keep it as is
             final_text += char
 
-    # Display the result
-    print(f"\n--- RESULT ---\n{final_text}\n--------------")
+    # Show a little preview
+    print("\n" + "="*40)
+    print("PREVIEW OF RESULT (First 100 chars):")
+    print("-" * 40)
+    print(final_text[:100] + ("..." if len(final_text) > 100 else ""))
+    print("="*40 + "\n")
+
+    # Figure out where to save the file
+    default_save_path = ""
+    if source == "3":
+        # If we opened a file, try to save the new one next to it
+        base_name, extension = os.path.splitext(file_path_in)
+        suffix = "_encrypted" if mode == "1" else "_decrypted"
+        default_save_path = f"{base_name}{suffix}{extension}"
+    else:
+        # Otherwise just put it in the script folder
+        default_save_path = os.path.join(script_folder, "result.txt")
+
+    if input("Do you want to save this file? (y/n): ").lower() == 'y':
+        
+        # Ask user for path
+        final_save_path = get_save_path(default_save_path)
+        
+        # Check if safe to write
+        if check_overwrite(final_save_path):
+            try:
+                with open(final_save_path, 'w', encoding='utf-8') as f:
+                    f.write(final_text)
+                print(f"SUCCESS! Output saved to:\n{final_save_path}")
+            except Exception as e:
+                print(f"Error writing new file: {e}")
+    else:
+        print("Save skipped.")
     
-    # Ask if the user wants to save the result to a new file
-    if input("Save to file? (y/n): ") == 'y':
-        name = input("Enter filename: ")
-        f = open(os.path.join(script_folder, name), "w")
-        f.write(final_text)
-        f.close()
-        print("File saved.")
-    
-    input("Press Enter to return...")
+    input("\nPress Enter to return...")
 
 
 # Feature 2: Password Generator
 def feature_password():
     print("\n--- Password Generator ---")
     
-    # Get the desired length from the user (validation loop)
     length = 0
+    # Make sure they enter a number at least 8
     while length < 8:
         try:
             length = int(input("Enter length (min 8): "))
         except:
-            pass # Ignore non-number inputs and loop again
+            pass 
 
-    # Ask for character types
     use_upper = input("Include Uppercase? (y/n): ") == 'y'
     use_lower = input("Include Lowercase? (y/n): ") == 'y'
     use_nums  = input("Include Numbers? (y/n): ")   == 'y'
     use_syms  = input("Include Symbols? (y/n): ")   == 'y'
 
-    # Ensure at least lowercase is selected if user picked nothing
+    # If they said no to everything, force lowercase so it works
     if not (use_upper or use_lower or use_nums or use_syms):
         use_lower = True
 
-    # Build the list of allowed characters
     chars = ""
     if use_upper: chars += string.ascii_uppercase
     if use_lower: chars += string.ascii_lowercase
     if use_nums:  chars += string.digits
     if use_syms:  chars += string.punctuation
 
-    # Generate the random password
     password = ""
     for i in range(length):
         password += random.choice(chars)
 
     print(f"\nGenerated Password: {password}")
     
-    # Option to save the password
     if input("Save to file? (y/n): ") == 'y':
-        f = open(os.path.join(script_folder, "pass.txt"), "w")
-        f.write(password)
-        f.close()
-        print("Saved to pass.txt")
+        
+        default_save_path = os.path.join(script_folder, "pass.txt")
+        final_save_path = get_save_path(default_save_path)
+
+        if check_overwrite(final_save_path):
+            try:
+                with open(final_save_path, "w") as f:
+                    f.write(password)
+                print(f"Saved to {final_save_path}")
+            except Exception as e:
+                print(f"Error saving file: {e}")
         
     input("Press Enter to return...")
 
 
-# Feature 3: OSINT Scanner (Finds emails/phones OR searches Social Media)
+# Feature 3: The Scanner (OSINT)
 def feature_osint():
     print("\n--- Target Scanner (OSINT) ---")
     print("Select Operation:")
-    print("1. Scan Local File (Emails/Phones)")
+    print("1. Scan Data (Internal or File)")
     print("2. LinkedIn Recon")
     print("3. Facebook Search")
-    print("4. X (Twitter) Search")  # <--- NEW
-    print("5. Instagram Search")    # <--- NEW
+    print("4. X (Twitter) Search")
+    print("5. Instagram Search")
     
     op_choice = input("Choice: ")
 
-    # --- OPTION 1: SCAN LOCAL FILE ---
     if op_choice == "1":
-        print("\n[File Scanner Selected]")
-        print("1. Default (test1.txt)")
-        print("2. Custom File Path")
+        print("\n[Scanner Selected]")
+        print("1. Scan Internal Demo Data")
+        print("2. Scan a Custom File Path")
         choice = input("Choice: ")
 
-        # Set the file path based on user choice
-        target_file = file1_path
+        content = ""
+        source_name = "Internal Memory"
 
-        if choice == "2":
+        if choice == "1":
+            source_name = "Demo Data"
+            content = """
+            Target: Francis / Ajax
+            Contact Email: francis@badguy.com
+            Standard Phone: 555-867-5309
+            Phone with spaces: (555) 123 4567
+            Short Phone: 555-0199
+            Phone with dots: 123.456.7890
+            """
+        elif choice == "2":
             raw_path = input("Enter the full file path to scan: ")
-            # .strip() removes extra spaces and quotation marks often added by 'Copy Path'
             target_file = raw_path.strip().strip('"').strip("'")
+            source_name = target_file
 
-        # Verify the file exists
-        if not os.path.exists(target_file):
-            print(f"Error: The file '{target_file}' is missing. Target lost.")
+            if not os.path.exists(target_file):
+                print(f"Error: The file '{target_file}' is missing.")
+                return
+
+            try:
+                f = open(target_file, "r", encoding='utf-8', errors='replace')
+                content = f.read()
+                f.close()
+            except Exception as e:
+                print(f"Error reading file: {e}")
+                return
+        else:
+            print("Invalid selection.")
             return
 
-        # Open and read the file content
-        try:
-            f = open(target_file, "r", encoding='utf-8', errors='ignore')
-            content = f.read()
-            f.close()
-        except Exception as e:
-            print(f"Error reading file: {e}")
-            return
-
-        # Display content for verification (truncated if too long)
-        print("\nFile Contents (Preview):")
+        print("\nData Preview:")
         print("------------------------------")
-        print(content[:500] + ("..." if len(content) > 500 else ""))
+        print(content[:500].strip() + ("..." if len(content) > 500 else ""))
         print("------------------------------")
 
-        # Regex pattern for Email addresses
-        email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        # I updated the regex patterns to be more accurate
+        # Email: I make sure it doesn't pick up dots at the end (like .net...)
+        email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}\b'
         
-        # Regex pattern for Phone numbers
-        phone_regex = r'[\d\-\(\)\.\s]{7,}'
+        # Phone: I made sure it ends with a number so it doesn't pick up trailing dots
+        phone_regex = r'[\d\-\(\)\.\s]{6,}\d'
 
-        # Find matches and remove duplicates using set()
+        # I used set() to remove duplicates, then turned it back into a list
         emails = list(set(re.findall(email_regex, content)))
         raw_phones = list(set(re.findall(phone_regex, content)))
 
-        # Filter phone numbers to ensure they have enough digits
         valid_phones = []
         for p in raw_phones:
-            # Count actual digits in the string
-            digit_count = 0
+            # I count how many digits are in the phone number
+            count = 0
             for char in p:
                 if char.isdigit():
-                    digit_count += 1
+                    count += 1
             
-            # Only keep it if it looks like a real number (5+ digits)
-            if digit_count >= 5:
+            # If it has at least 5 numbers, I count it as a phone number
+            if count >= 5:
                 valid_phones.append(p.strip())
 
-        # Display findings
         print(f"\nEmails Found: {len(emails)}")
         for e in emails: print(f"- {e}")
 
         print(f"\nPhones Found: {len(valid_phones)}")
         for p in valid_phones: print(f"- {p}")
 
-        # Save the report to a file
         if input("\nSave report? (y/n): ") == 'y':
-            f = open(os.path.join(script_folder, "scan_report.txt"), "w")
-            f.write(f"Source: {target_file}\n")
-            f.write(f"Emails: {emails}\nPhones: {valid_phones}")
-            f.close()
-            print("Report saved.")
+            
+            default_save_path = os.path.join(script_folder, "scan_report.txt")
+            final_save_path = get_save_path(default_save_path)
 
-    # --- SOCIAL MEDIA SEARCH HELPER ---
+            if check_overwrite(final_save_path):
+                try:
+                    with open(final_save_path, "w") as f:
+                        f.write(f"Source: {source_name}\n")
+                        f.write(f"Emails: {emails}\nPhones: {valid_phones}")
+                    print(f"Report saved to {final_save_path}")
+                except Exception as e:
+                    print(f"Error saving report: {e}")
+
     elif op_choice in ["2", "3", "4", "5"]:
         target_name = input("\nEnter the name of the target: ")
         
         site = ""
-        site_name = ""
         extra_query = ""
         
+        # Set up the search based on what site they picked
         if op_choice == "2":
             site = "linkedin.com"
-            site_name = "LinkedIn"
             extra_query = input("Enter company/keyword (optional): ")
         elif op_choice == "3":
             site = "facebook.com"
-            site_name = "Facebook"
             extra_query = input("Enter city/keyword (optional): ")
         elif op_choice == "4":
             site = "twitter.com"
-            site_name = "X (Twitter)"
             extra_query = input("Enter handle/keyword (optional): ")
         elif op_choice == "5":
             site = "instagram.com"
-            site_name = "Instagram"
             extra_query = input("Enter handle/keyword (optional): ")
 
-        print(f"\n[{site_name} Recon Selected]")
-        
-        # Construct the Google Dork query
         search_query = f'site:{site} "{target_name}" {extra_query}'
         
         print(f"Searching for: {search_query}")
         print("Opening browser... maximum effort!")
         
+        # This opens the google search in the default browser
         webbrowser.open(f"https://www.google.com/search?q={search_query}")
         
     else:
@@ -277,11 +341,7 @@ def feature_osint():
     input("\nPress Enter to return...")
 
 
-# Main Menu Loop
 def main():
-    # Initialize the test files when program starts
-    create_test_files()
-
     while True:
         print("\n=== DEADPOOL TOOL ===")
         print("1. Encrypt/Decrypt")
@@ -289,19 +349,18 @@ def main():
         print("3. OSINT Scanner")
         print("4. Exit")
         
-        c = input("Choice: ")
+        choice = input("Choice: ")
         
-        if c == "1": 
+        if choice == "1": 
             feature_cipher()
-        elif c == "2": 
+        elif choice == "2": 
             feature_password()
-        elif c == "3": 
+        elif choice == "3": 
             feature_osint()
-        elif c == "4": 
+        elif choice == "4": 
             break
         else: 
             print("Invalid selection.")
 
-# Run the main function
 if __name__ == "__main__":
     main()
