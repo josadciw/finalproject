@@ -164,12 +164,18 @@ def feature_password():
     print("\n--- Password Generator ---")
     
     length = 0
-    # Make sure they enter a number at least 8
+    # Make sure they enter a number at least 8. 
+    # UPDATED: Replaced generic input with specific instructions and error handling.
     while length < 8:
         try:
-            length = int(input("Enter length (min 8): "))
-        except:
-            pass 
+            val = input("How many characters long should the password be? (Enter a number, min 8): ")
+            length = int(val)
+            
+            if length < 8:
+                print("Too short! Please enter a number that is 8 or higher.")
+        except ValueError:
+            # This runs if they type text (like "ten") instead of a number
+            print("Invalid input. Please type a standard number (e.g., 12).")
 
     use_upper = input("Include Uppercase? (y/n): ") == 'y'
     use_lower = input("Include Lowercase? (y/n): ") == 'y'
