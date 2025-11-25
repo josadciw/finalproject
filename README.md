@@ -1,55 +1,61 @@
 # finalproject
-Deadpool Encryption Tool
+Deadpool Encryption Tool (Final Project)
+Welcome to my Final Project! This is a multi-purpose Python tool designed for "Maximum Effort." It helps you protect your secrets, generate uncrackable passwords, and scan for information on targets.
 
-Hi! This is my final project. I built a Python tool inspired by Deadpool that handles a few different security tasks. It is designed to be a entry level tool for basic encryption and recon.
+I wrote this script to be interactive, so just run it and follow the prompts on the screen!
 
-What it does
+What This Tool Does
+1. The Cipher (Scrambler)
+This feature takes normal text and scrambles it so nobody else can read it. It uses a custom alphabet key to swap letters.
 
-I packed three main features into this script:
+Encrypt: Turns readable text into gibberish.
 
-1. File Scrambler (Encrypt/Decrypt)
+Decrypt: Turns the gibberish back into readable text.
 
-This tool lets you hide messages so others can't read them.
-
-Encrypt: You type in text (it supports multiple lines now!) or load it from a file, and the script scrambles the letters using a substitution cipher.
-
-Decrypt: You can turn the scrambled text back into readable English.
-
-It automatically saves your secret messages to a file if you want.
+Sources: You can type text manually, use the internal demo text, or load a text file from your computer.
 
 2. Password Generator
+Stop using "password123"! This tool builds a strong, random password for you.
 
-Stop using "password123"!
+You choose the length (minimum 8 characters).
 
-This feature creates strong, random passwords for you.
+You pick what to include: Uppercase, Lowercase, Numbers, and Symbols.
 
-The user input for the password generator is number input only (to define the length).
+It saves the password to a file so you don't forget it.
 
-It then generates the password using the specified input you decided.
+3. The Scanner (OSINT)
+This is the "Target Scanner." It looks through data to find contact information using specific patterns (Regex).
 
-3. OSINT Scanner (The Recon Tool)
+Data Scan: It reads through text and pulls out Emails and Phone Numbers. I fixed the code so it stops grabbing extra dots or weird characters at the end of emails.
 
-This is for gathering information ("Open Source Intelligence"). It has two modes:
+Web Recon: You can pick a target name, and the tool will automatically open a Google search specifically for LinkedIn, Facebook, X (Twitter), or Instagram to find them.
 
-Local Scan: You give it a text file, and it digs through it to find and list any Email Addresses or Phone Numbers hiding inside.
+How to Test It (Important!)
+I have included a specific file called Vaderinfo.txt in this folder.
 
-Social Media Search: You enter a target's name, and the script opens your web browser to search for their profiles on LinkedIn, Facebook, X (Twitter), and Instagram. It uses Google "dorks" to find the specific profiles without needing to log in.
+Use this file to test Feature 3 (The Scanner).
 
-How to use it
+When the tool asks for a file path, enter the path to Vaderinfo.txt.
 
+You will see how the tool ignores the junk text and extracts only the valid emails and phone numbers!
+
+Improvements & Fixes
+Custom Saving: I added a feature that lets you pick exactly where you want to save your files. You can type a specific folder path, or just hit Enter to save it in the default spot.
+
+Regex Update: I updated the pattern matching so it catches phone numbers with dots (123.456.7890) but ignores random numbers that aren't phones.
+
+How to Run
 Make sure you have Python installed.
 
-Download the newfinal.py file.
+Open your terminal or command prompt.
 
-Run it in your terminal or command prompt:
+Run the script:
 
-python newfinal.py
+Bash
 
+python FinalProject.py
+Follow the menu options (1, 2, or 3).
 
-Follow the menu options on the screen!
-
-Note
-
-The script automatically creates some dummy files (test1.txt and test2.txt) in the same folder so you can test out the features right away without needing your own files.
+Note: Be careful when overwriting files—the tool will warn you if a file already exists!
 
 Disclaimer: This is for educational purposes only. Don't use the OSINT scanner to be a creep.
